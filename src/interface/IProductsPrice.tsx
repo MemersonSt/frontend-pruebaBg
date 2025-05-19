@@ -1,6 +1,6 @@
 interface IProductsPrice {
-  code: number;
-  codeProduct: string;
+  id: number;
+  codeProducts: string;
   stock: number;
   lote: string;
   dateLote: string;

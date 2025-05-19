@@ -22,9 +22,14 @@ const updateProduct = (data: IProducts) => {
 };
 
 const deleteProduct = (id: number) => {
-  const url = `/Products/${id}`;
+  const url = `/Products/delete/${id}`;
   return services.delete(url).then((res) => res.data);
 };
+
+const deleteProductPrice = (id: number) => {
+  const url = `/Products/deleteprice/${id}`;
+  return services.delete(url).then((res) => res.data);
+}
 
 const productsServices = {
   listProducts,
@@ -32,6 +37,7 @@ const productsServices = {
   saveProduct,
   updateProduct,
   deleteProduct,
+  deleteProductPrice,
 };
 
 export default productsServices;

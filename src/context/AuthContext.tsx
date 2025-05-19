@@ -1,60 +1,67 @@
-import { createContext, useState } from "react";
+import { createContext, useEffect, useState } from "react";
 import type { IAuth } from "../interface/IAuth";
 import type { IUser } from "../interface/IUser";
 import authService from "../services/user.services";
+import logService from "../services/config/logServices";
+import useSnackbar from "../hooks/useSnackbar";
 
 const AuthContext = createContext<{
   user: IUser | null;
   login: (data: IAuth) => Promise<boolean>;
   logout: () => Promise<boolean>;
-  session: () => Promise<boolean>;
 }>({
   user: null,
   login: async () => false,
   logout: async () => false,
-  session: async () => false,
 });
 
 function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<IUser | null>(null);
+  const { showMessage } = useSnackbar();
 
   const login = async (data: IAuth) => {
-    const response = await authService.login(data);
-    // console.log("response", response);
+    try {
+      const response = await authService.login(data);
 
-    if (response.status === 200) {
-      //   const { data: userData } = response;
-      //   setUser(userData);
-      //   localStorage.setItem("access", userData.token);
-      //   localStorage.setItem("user", JSON.stringify(userData));
+      if (response.status !== 200) return false;
+
+      await session();
+
       return true;
+    } catch (err) {
+      logService.error("Error in login", err);
+      showMessage("Fallo al ingresar, verifique sus credenciales.", "error");
+      return false;
     }
-
-    return false;
   };
 
   const logout = async () => {
-    await authService.logout().then((res) => {
-      if (res.status === 200) return true;
-    });
+    const res = await authService.logout();
+    if (res.status === 200) {
+      setUser(null);
+      //   localStorage.removeItem("access");
+      //   localStorage.removeItem("user");
+      return true;
+    }
 
     return false;
   };
 
   const session = async () => {
-    const response = await authService.session();
-    if (response.status === 200) {
-      const { data } = response;
-      setUser(data);
-      //   localStorage.setItem("access", data.token);
-      //   localStorage.setItem("user", JSON.stringify(data));
-      return true;
-    }
-    return false;
+    await authService.session().then((res) => {
+      if (res.status === 200) {
+        const { data: userData } = res;
+        setUser(userData);
+      }
+    });
   };
 
+  useEffect(() => {
+    session();
+  }, []);
+
   return (
-    <AuthContext.Provider value={{ user, login, logout, session }}>
+    <AuthContext.Provider value={{ user, login, logout }}>
       {children}
     </AuthContext.Provider>
   );

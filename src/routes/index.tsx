@@ -6,6 +6,7 @@ import Layout from "../components/layout";
 import ProductsForm from "../components/template/products/ProductsForm";
 import ProtectedRoute from "../components/guards/ProtectedRoute";
 import NotFoundPage from "../pages/NotFoundPage";
+import UnauthorizedTemplate from "../components/template/Unauthorized";
 
 export default function Routes() {
   return useRoutes([
@@ -39,5 +40,9 @@ export default function Routes() {
       path: "*",
       element: <NotFoundPage />,
     },
+    {
+      path: "/unauthorized",
+      element: <UnauthorizedTemplate />,
+    }
   ]);
 }

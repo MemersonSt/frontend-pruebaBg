@@ -5,10 +5,6 @@ const log = (
   data?: any,
   type?: "info" | "error" | "success"
 ) => {
-  // Puedes enviar logs a un backend, o solo a consola
-  //   if (import.meta.env.VITE_APP_STATE === "development") {
-  //     console.log(`[LOG] ${new Date().toISOString()}: ${message}`, data || "");
-  //   }
 
   switch (type) {
     case "info":
@@ -32,7 +28,6 @@ const log = (
     default:
       console.log(`[LOG] ${new Date().toISOString()}: ${message}`, data || "");
   }
-  // Aquí podrías enviar logs a un servidor si lo necesitas
 };
 
 const logService = {

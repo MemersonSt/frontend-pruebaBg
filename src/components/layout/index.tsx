@@ -1,4 +1,5 @@
 import {
+  alpha,
   AppBar,
   Avatar,
   Box,
@@ -18,9 +19,10 @@ import {
 } from "@mui/material";
 import { IoMenu } from "react-icons/io5";
 import { useState } from "react";
-import { Outlet, useNavigate } from "react-router-dom";
+import { Outlet, useLocation, useNavigate } from "react-router-dom";
 import useAuth from "../../hooks/useAuth";
 import ColorModeSelect from "../theme/ColorModeSelect";
+import Transition from "../ui/Transition";
 
 const drawerWidth = 220;
 
@@ -53,6 +55,7 @@ export default function Layout() {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const isMobile = useMediaQuery("(max-width:900px)");
   const navigate = useNavigate();
+  const location = useLocation();
 
   const handleAvatarClick = (event: React.MouseEvent<HTMLElement>) => {
     setAnchorEl(event.currentTarget);
@@ -66,6 +69,13 @@ export default function Layout() {
     setDrawerOpen((prev) => !prev);
   };
 
+  const handleLogout = async () => {
+    const islogout = await logout();
+    if (islogout) {
+      navigate("/");
+    }
+  };
+
   const menuItems = [
     { text: "Productos", path: "/system/home" },
     { text: "Inventario", path: "/system/products" },
@@ -77,26 +87,30 @@ export default function Layout() {
         {menuItems.map((item) => (
           <ListItem key={item.text} disablePadding>
             <ListItemButton
+              selected={location.pathname === item.path}
               onClick={() => {
                 navigate(item.path);
                 setDrawerOpen(false);
               }}
             >
-              <ListItemText primary={item.text} />
+              <ListItemText
+                sx={{
+                  fontWeight:
+                    location.pathname === item.path ? "bold" : "normal",
+                }}
+                primary={item.text}
+              />
             </ListItemButton>
           </ListItem>
         ))}
         <Divider />
-        <ListItem disablePadding>
-          <ListItemButton
-            onClick={() => {
-              logout();
-              setDrawerOpen(false);
-            }}
-          >
-            <ListItemText primary="Cerrar sesión" />
-          </ListItemButton>
-        </ListItem>
+        {isMobile && (
+          <ListItem disablePadding>
+            <ListItemButton onClick={handleLogout}>
+              <ListItemText primary="Cerrar sesión" />
+            </ListItemButton>
+          </ListItem>
+        )}
       </List>
     </Box>
   );
@@ -165,14 +179,7 @@ export default function Layout() {
                 </Typography>
               </Box>
               <Divider sx={{ borderStyle: "dashed" }} />
-              <MenuItem
-                onClick={() => {
-                  handleMenuClose();
-                  logout();
-                }}
-              >
-                Cerrar sesión
-              </MenuItem>
+              <MenuItem onClick={handleLogout}>Cerrar sesión</MenuItem>
             </Menu>
           </Box>
         </Toolbar>
@@ -185,7 +192,12 @@ export default function Layout() {
           ModalProps={{ keepMounted: true }}
           sx={{
             [`& .MuiDrawer-paper`]: {
+              width: drawerWidth,
+              boxSizing: "border-box",
               top: "10vh",
+              backgroundColor: (theme) =>
+                alpha(theme.palette.primary.main, 0.2),
+              backdropFilter: "blur(8px)",
             },
           }}
         >
@@ -215,7 +227,9 @@ export default function Layout() {
           transition: "margin-left 0.3s",
         }}
       >
-        <Outlet />
+        <Transition>
+          <Outlet />
+        </Transition>
       </ContentMain>
     </Box>
   );

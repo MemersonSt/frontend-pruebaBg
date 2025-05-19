@@ -10,13 +10,7 @@ const login = (data: IAuth) => {
 
 const logout = () => {
   const url = "/Athenticate/logout";
-  return services.post(
-    url,
-    {},
-    {
-      withCredentials: true,
-    }
-  );
+  return services.post(url);
 };
 
 const session = () => {
@@ -26,10 +20,18 @@ const session = () => {
   });
 };
 
+const checkSession = () => {
+  const url = "/Athenticate/check";
+  return services.get(url, {
+    withCredentials: true,
+  });
+}
+
 const authService = {
   login,
   logout,
   session,
+  checkSession,
 };
 
 export default authService;

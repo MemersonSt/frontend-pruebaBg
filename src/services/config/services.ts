@@ -2,6 +2,10 @@ import axios, { AxiosError, type AxiosResponse } from "axios";
 
 const handleAxiosError = (error: AxiosError<{ message: string }, unknown>) => {
   if (error.response) {
+    // if (error.response.status === 401) {
+    //   console.error("Unauthorized access - redirecting to login");
+    //   window.location.href = "/unauthorized";
+    // }
     console.error("Response error:", error.response.data);
     throw new Error(`Error: ${error.response.status} - ${error.response.data}`);
   } else if (error.request) {

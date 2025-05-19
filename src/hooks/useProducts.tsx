@@ -1,8 +1,14 @@
 import { useEffect, useState } from "react";
 import type { IProducts } from "../interface/IProducts";
 import productsServices from "../services/products.services";
+import useLoading from "./useLoading";
+import useSnackbar from "./useSnackbar";
+import logService from "../services/config/logServices";
+import type { IProductsPrice } from "../interface/IProductsPrice";
 
 export default function useProducts() {
+  const { startLoading, stopLoading } = useLoading();
+  const { showMessage } = useSnackbar();
   const [isSaved, setIsSaved] = useState(false);
   const [products, setProducts] = useState<IProducts[]>([]);
   const [form, setForm] = useState<IProducts>({
@@ -90,44 +96,77 @@ export default function useProducts() {
 
   const saveProduct = async () => {
     if (!isFormValid()) return;
-
+    startLoading();
     await productsServices
       .saveProduct(form)
       .then(() => {
-        alert("Producto guardado correctamente");
+        showMessage("Producto guardado correctamente", "success");
         setIsSaved(true);
       })
       .catch((err) => {
-        alert("Error al guardar el producto");
-        console.log(err);
+        showMessage("Error al guardar el producto", "error");
+        logService.error("Error al guardar el producto", err);
+      })
+      .finally(() => {
+        stopLoading();
       });
   };
 
   const updateProduct = async () => {
     if (!isFormValid()) return;
-
+    startLoading();
     await productsServices
       .updateProduct(form)
       .then(() => {
-        alert("Producto actualizado correctamente");
+        showMessage("Producto actualizado correctamente", "success");
       })
       .catch((err) => {
         alert("Error al actualizar el producto");
-        console.log(err);
+        logService.error("Error al actualizar el producto", err);
+      })
+      .finally(() => {
+        stopLoading();
       });
   };
 
   const deleteProduct = (codigo: number) => {
     if (window.confirm("¿Está seguro de eliminar el producto?")) {
+      startLoading();
       productsServices
         .deleteProduct(codigo)
         .then(() => {
-          alert("Producto eliminado correctamente");
+          showMessage("Producto eliminado correctamente", "success");
+          setProducts((prev) => prev.filter((p) => p.code !== codigo));
           setIsSaved(true);
         })
         .catch((err) => {
-          alert("Error al eliminar el producto");
-          console.log(err);
+          showMessage("Error al eliminar el producto", "error");
+          logService.error("Error al eliminar un producto", err);
+        })
+        .finally(() => {
+          stopLoading();
+        });
+    }
+  };
+
+  const deleteProductPrice = async (codigo: number) => {
+    if (window.confirm("¿Está seguro de eliminar el precio?")) {
+      startLoading();
+      await productsServices
+        .deleteProductPrice(codigo)
+        .then(() => {
+          showMessage("Precio eliminado correctamente", "success");
+          setForm((prev) => ({
+            ...prev,
+            prices: prev.prices?.filter((p) => p.id !== codigo) || [],
+          }));
+        })
+        .catch((err) => {
+          showMessage("Error al eliminar el precio", "error");
+          logService.error("Error al eliminar un precio", err);
+        })
+        .finally(() => {
+          stopLoading();
         });
     }
   };
@@ -157,24 +196,41 @@ export default function useProducts() {
           createdAt: null,
           updatedAt: null,
           deletedAt: null,
-          prices: res.prices,
+          prices:
+            res.prices?.map((p: IProductsPrice) => ({
+              id: p.id,
+              codeProducts: p.codeProducts,
+              price: p.price,
+              stock: p.stock,
+              lote: p.lote,
+              dateLote: p.dateLote?.split("T")[0],
+            })) || [],
         });
         setIsSaved(false);
       })
       .catch((err) => {
-        alert("Error al obtener el producto");
-        console.log(err);
+        showMessage("Error al obtener el producto", "error");
+        logService.error("Error al obtener el producto", err);
       });
   };
 
   const getAllProducts = async () => {
-    const res = await productsServices.listProducts();
-    console.log(res);
-    setProducts(res);
+    startLoading();
+    try {
+      const res = await productsServices.listProducts();
+      console.log(res);
+      setProducts(res);
+    } catch (err) {
+      showMessage("Error al obtener los productos", "error");
+      logService.error("Error al obtener todos los productos", err);
+    } finally {
+      stopLoading();
+    }
   };
 
   useEffect(() => {
     getAllProducts();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   return {
@@ -187,6 +243,7 @@ export default function useProducts() {
     saveProduct,
     updateProduct,
     deleteProduct,
+    deleteProductPrice,
     getProduct,
   };
 }

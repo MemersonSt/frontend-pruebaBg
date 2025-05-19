@@ -1,9 +1,7 @@
 import * as React from "react";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
-import Checkbox from "@mui/material/Checkbox";
 import CssBaseline from "@mui/material/CssBaseline";
-import FormControlLabel from "@mui/material/FormControlLabel";
 import FormLabel from "@mui/material/FormLabel";
 import FormControl from "@mui/material/FormControl";
 import TextField from "@mui/material/TextField";
@@ -13,9 +11,11 @@ import MuiCard from "@mui/material/Card";
 import { styled } from "@mui/material/styles";
 import ColorModeSelect from "../theme/ColorModeSelect";
 import ForgotPassword from "../ui/ForgotPassword";
-import { SitemarkIcon } from "../ui/CustomIcons";
+// import { SitemarkIcon } from "../ui/CustomIcons";
 import useAuth from "../../hooks/useAuth";
 import { useNavigate } from "react-router-dom";
+import { CircularProgress } from "@mui/material";
+import useSnackbar from "../../hooks/useSnackbar";
 
 const Card = styled(MuiCard)(({ theme }) => ({
   display: "flex",
@@ -64,7 +64,9 @@ export default function AuthForm() {
   const [emailErrorMessage, setEmailErrorMessage] = React.useState("");
   const [passwordError, setPasswordError] = React.useState(false);
   const [passwordErrorMessage, setPasswordErrorMessage] = React.useState("");
+  const [isLoading, setIsLoading] = React.useState(false);
   const [open, setOpen] = React.useState(false);
+  const { showMessage } = useSnackbar();
 
   const { login } = useAuth();
   const navigate = useNavigate();
@@ -75,15 +77,24 @@ export default function AuthForm() {
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    try {
+      setIsLoading(true);
+      const data = new FormData(event.currentTarget);
 
-    const data = new FormData(event.currentTarget);
+      const res = await login({
+        username: (data.get("username") as string) ?? "",
+        password: (data.get("password") as string) ?? "",
+      });
 
-    const res = await login({
-      username: (data.get("username") as string) ?? "",
-      password: (data.get("password") as string) ?? "",
-    });
-
-    if (res) navigate("/system/home");
+      if (res) navigate("/system/home");
+      else {
+        showMessage("Fallo al ingresar, verifique sus credenciales.", "error");
+      }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const validateInputs = () => {
@@ -121,13 +132,13 @@ export default function AuthForm() {
           sx={{ position: "fixed", top: "1rem", right: "1rem" }}
         />
         <Card variant="outlined">
-          <SitemarkIcon />
+          {/* <SitemarkIcon /> */}
           <Typography
             component="h1"
             variant="h4"
             sx={{ width: "100%", fontSize: "clamp(2rem, 10vw, 2.15rem)" }}
           >
-            Sign in
+            Inicio de Sesión
           </Typography>
           <Box
             component="form"
@@ -159,7 +170,7 @@ export default function AuthForm() {
               />
             </FormControl>
             <FormControl>
-              <FormLabel htmlFor="password">Password</FormLabel>
+              <FormLabel htmlFor="password">Contraseña</FormLabel>
               <TextField
                 size="small"
                 error={passwordError}
@@ -176,18 +187,30 @@ export default function AuthForm() {
                 color={passwordError ? "error" : "primary"}
               />
             </FormControl>
-            <FormControlLabel
-              control={<Checkbox value="remember" color="primary" />}
-              label="Remember me"
-            />
             <ForgotPassword open={open} handleClose={handleClose} />
             <Button
               type="submit"
               fullWidth
               variant="contained"
               onClick={validateInputs}
+              disabled={isLoading}
+              startIcon={
+                isLoading && (
+                  <Box
+                    sx={{
+                      display: "flex",
+                      justifyContent: "center",
+                      alignItems: "center",
+                      width: "1.5rem",
+                      height: "1.5rem",
+                    }}
+                  >
+                    <CircularProgress size={24} />
+                  </Box>
+                )
+              }
             >
-              Sign in
+              Ingresar
             </Button>
           </Box>
         </Card>

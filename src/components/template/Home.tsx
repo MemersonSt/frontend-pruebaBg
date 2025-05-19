@@ -1,13 +1,14 @@
 import { Card, CardContent, Grid2, Typography } from "@mui/material";
 import useProducts from "../../hooks/useProducts";
 import useAuth from "../../hooks/useAuth";
+import Transition from "../ui/Transition";
 
 export default function HomeTemplate() {
   const { products } = useProducts();
   const { user } = useAuth();
 
   return (
-    <div>
+    <Transition>
       <h1>Bienvenido {user?.name}</h1>
       <p>Estos son los productos disponibles:</p>
       <Grid2 container spacing={2}>
@@ -29,6 +30,6 @@ export default function HomeTemplate() {
           </Grid2>
         ))}
       </Grid2>
-    </div>
+    </Transition>
   );
 }
